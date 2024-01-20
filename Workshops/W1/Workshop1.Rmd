@@ -1,0 +1,181 @@
+---
+title: "Multivariate Data Analysis: Workshop1"
+output: pdf_document
+date: "2024-01-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Loading a dataset
+
+We will work on the (famous) Titanic dataset. Load the Titanic data set from a csv file (note that dots were used to represent missing data)
+
+```{r}
+Titanic <- read.csv("Titanic.csv",na.strings=".")
+#
+# Define Sex as factor (0 = Female, 1 = Male)
+#
+Titanic$Sex <- factor(Titanic$Sex,levels=c(0,1),labels=c("Female","Male"))
+```
+
+## Simple computations
+
+### Table
+
+We can represent the empirical joint distribution table (contingency table, cross tab, 2-way table) containing the counts of each categories.
+
+```{r}
+table(Titanic$Sex,Titanic$Survived)
+```
+
+We can transform this into proportion table:
+
+```{r}
+table(Titanic$Sex,Titanic$Survived)/nrow(Titanic)
+```
+
+The function \texttt{ftable} does the same thing but with a "flat" matrix.
+
+### Marginal Distributions
+
+The empirical marginal distributions are obtained by considering only the column of interest (i.e. the table contain a sample from (X,Y), so the first column is a sample from X). We can compute, run tests and infer on these samples as usually in the univariate case.
+
+```{r}
+table(Titanic$Survived)/nrow(Titanic) #proportion of survivants
+```
+
+It is also possible to add margins to a contingency table:
+
+
+```{r}
+tableTitanic <- table(Titanic$Sex,Titanic$Survived)/nrow(Titanic)
+addmargins(tableTitanic)
+```
+
+## Conditional distributions
+
+Now we want to understand the dependencies between the observations. The conditional density between $X$ and $Y$ writes:
+
+\[ f_{X\mid Y}(x \mid y) = \frac{f_{X,Y}(x,y)}{f_Y(y)} \]
+
+Ex: How do you estimate the probability of a woman to survive?
+
+By using the help, find how to use \texttt{prop.table} to do these computations.
+
+## Independence tests
+
+By using \texttt{summary} on a table, you can perform independence $\chi^2$ tests:
+
+```{r}
+summary(table(Titanic$Sex,Titanic$Survived))
+```
+
+Remind yourself how to read this result.
+
+## Some graphical representations
+
+A simple way to graphically represent a table is to produce a \emph{mosaic}:
+
+```{r}
+
+plot(tableTitanic,main="Titanic",ylab="Survived",xlab="Sex",col=rainbow(2))
+
+```
+
+With a larger dataset, you can envision a larger spectrum of colors, for example using the \texttt{HairEyeColor} dataset.
+
+```{r}
+
+a <- as.table(HairEyeColor[,,"Male"]) # Extract table for Male category
+a
+
+```
+
+
+```{r}
+
+plot(a,main="Hair and eye colour (Male)",ylab="Eye",xlab="Hair",col=rainbow(4))
+
+```
+
+Ex. Do the same with \texttt{b} which will contain the same results for the Female category.
+
+You can represent all the results of this bivariate categorical distribution on a grouped barplot:
+
+```{r}
+
+barplot(t(a),main="Hair and eye colour (Male)",col=rainbow(4),beside=T,xlab="Hair color",
+legend=T,args.legend=list(x="topleft",bty="n"))
+
+```
+
+### More than two variates
+
+Use the \texttt{ftable} function on the \texttt{HairEyeColor} dataset, and understand it.
+
+Load the \texttt{Personal.csv} dataset it contains 4 variables, check how to use the \texttt{row.vars} and \texttt{col.vars} arguments to change the representation of the table.
+
+## Numerical variables
+
+In the case of continuous variables, covariance and correlation are better way to understand relationships between variables:
+
+\[ S_{x,y} = \frac{\sum_i (x_i - \bar{x} )(y_i - \bar{y} )}{n}, \quad r_{x,y} = \frac{S_{x,y}}{S_x S_y}. \]
+
+Use the \texttt{airquality} dataset, considering the first 4 variates to be continuous. Check the help on this dataset.
+
+```{r}
+air=airquality[,1:4]
+```
+
+There is missing data on this dataset. Check how the different functions react to the way to treat the missing data. For example:
+
+```{r}
+
+colMeans(air)
+
+colMeans(air,na.rm=T)
+
+```
+
+Use the \texttt{apply} function to compute empirical variances of the variables.
+
+You can use the \texttt{cor} function to plot correlation matrix, the \texttt{cov} function to plot the covariance matrix and the \texttt{cov2cor} function to convert a covariance matrix into a correlation matrix.
+
+
+### Visualisation of the relationships
+
+First, you can produce simple scatterplot of two variables.
+
+```{r}
+plot(air$Temp,air$Wind,ylab="Wind",xlab="Temperature (°F)")
+```
+
+You can then fitt a Loess curve to this plot:
+
+```{r}
+
+scatter.smooth(air$Temp,air$Wind,ylab="Wind",xlab="Temperature (°F)",lpars=list(col="red"))
+
+```
+
+You can visualise all the pairs of variables at once using:
+
+```{r}
+
+plot(air) #same as pairs()
+
+```
+
+For three variables, you can use the less readable 3D scatterplots:
+
+```{r}
+
+#install.packages("scatterplot3d")
+library(scatterplot3d)
+scatterplot3d(air$Temp,air$Wind,air$Solar.R,color="blue")
+
+```
+
+Ex. Do the same with the \texttt{iris} dataset.
